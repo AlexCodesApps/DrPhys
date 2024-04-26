@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <memory>
 
 namespace Camera {
     constexpr int16_t width = 400, height = 200;
@@ -11,8 +12,18 @@ namespace Camera {
     SDL_Point Position;
 };
 
+namespace TimeManager {
+    static uint64_t ElapsedTime = SDL_GetTicks64();
+    static uint64_t DeltaTime = 0;
+    void AdvanceTime() {
+        DeltaTime = SDL_GetTicks64() - ElapsedTime;
+        ElapsedTime = SDL_GetTicks64();
+    }
+}
+
 enum class SpriteKind {
     None = 0,
+    Tile,
     Player,
     Enemy,
     Weapon,
@@ -22,59 +33,56 @@ enum class SpriteKind {
 
 typedef SDL_FRect Hitbox;
 
-struct Sprite {
-    SpriteKind kind = SpriteKind::None;
-    int64_t depth;
-    SDL_Texture* image;
+struct Image {
+    SDL_Texture* texture;
     SDL_Rect Source;
+};
+
+struct Sprite {
+    static inline uint64_t z_counter = 0;
+    static inline uint64_t last_id = 0;
+    const uint64_t ID = last_id++;
+    SpriteKind kind = SpriteKind::None;
     SDL_FRect Body;
+    Image * image;
+    int depth = z_counter++;
+    Sprite(SpriteKind _kind, Hitbox _Body, Image * _image) : kind(_kind), Body(_Body), image(_image) {}
+    Sprite(SpriteKind _kind, Image * _image) : kind(_kind), image(_image) {}
+    Sprite(SpriteKind = SpriteKind::None) : kind(SpriteKind::None) {}
 };
 
-enum class Direction {
-    None = 0,
-    Up,
-    Down,
-    Left,
-    Right,
-    UpLeft,
-    UpRight,
-    DownLeft,
-    DownRight
-};
-
-struct AnimatedSprite {
-    AnimatedSprite() {
-        animated_sprites.push_back(this);
+struct Animator {
+    bool Active = true;
+    Animator(Image * image, int8_t _FPS, bool Active = true) : FPS(_FPS > 0 ? _FPS : 1), image(image), Active(Active) {
+        SDL_QueryTexture(image->texture, nullptr, nullptr, &FrameCount, nullptr);
+        FrameCount /= Width;
+        animators.push_back(this);
     }
-    AnimatedSprite(Sprite base, int frameCount, double fps) : base_sprite(base), frameCount(frameCount), FPS(fps) {
-        animated_sprites.push_back(this);
+    ~Animator() {
+        animators.erase(std::remove(animators.begin(), animators.end(), this), animators.end());
     }
-    static inline std::vector<AnimatedSprite*> animated_sprites;
-    double FPS = 5.5;
-    int currentFrame = 0;
-    int frameCount = 1;
-    int width = 16, height = 16;
-    Sprite base_sprite;
-    void AdvanceFrame() {
-        currentFrame = (currentFrame < frameCount - 1) ? currentFrame + 1 : 0;
-        base_sprite.Source.x = currentFrame * width;
-    }
-
-    void Update() {
-        static Uint64 elapsedTime = 0.0;
-        Uint64 currentTime = SDL_GetTicks64();
-        if (currentTime - elapsedTime >= 1000.0 / FPS) {
-            AdvanceFrame();
-            elapsedTime = currentTime;
-        }
-    }
-
+    int FrameCount = 0;
+    uint8_t Counter = 0;
+    uint8_t const FPS = 10;
+    static constexpr uint8_t Width = 16;
+    static inline std::vector<Animator*> animators;
     static void GlobalUpdate() {
-        for (auto& sprite : animated_sprites) {
-            sprite->Update();
+        for (auto animator : animators) {
+            animator->Update();
+        }
+    }
+    Image * image;
+    void Update() {
+        if (!Active) return;
+        const int Wait = 1000 / FPS;
+        if (++Counter*TimeManager::DeltaTime >= Wait) {
+            Counter = 0;
+            image->Source.x += Width;
+            if (image->Source.x >= FrameCount * Width) image->Source.x = 0;
         }
     }
 };
+
 
 SDL_FRect operator+(const SDL_FRect& a, const SDL_FRect& b) {
     return {a.x + b.x, a.y + b.y, a.w + b.w, a.h + b.h};
@@ -86,9 +94,9 @@ SDL_FRect operator +(const SDL_FRect& a, const SDL_Point& b) {
 
 namespace Renderer {
     static constexpr int8_t SDL_FLAGS = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-    static std::vector<Sprite*> RenderList;
     static SDL_Renderer* renderer;
     static SDL_Window* window;
+    static std::vector<Sprite*> sprites;
     static SDL_Event event;
     static bool running = true;
     static SDL_Color render_clear = {0, 0, 0, 0};
@@ -102,7 +110,6 @@ namespace Renderer {
     void Update() {}
 
     void Input() {
-        static const uint8_t* keyboard_state = SDL_GetKeyboardState(nullptr);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
@@ -110,10 +117,11 @@ namespace Renderer {
         }
     }
     void Render() {
+        static SDL_FRect DestRect;
         SDL_RenderClear(renderer);
-        for (auto * sprite : RenderList) {
-            auto bufferedRect = sprite->Body + Camera::Position;
-            SDL_RenderCopyF(renderer, sprite->image, &sprite->Source, &bufferedRect);
+        for (auto sprite : sprites) {
+            DestRect = sprite->Body + Camera::Position;
+            SDL_RenderCopyF(renderer, sprite->image->texture, &sprite->image->Source, &DestRect);
         }
         SDL_RenderPresent(renderer);
     }
@@ -122,5 +130,9 @@ namespace Renderer {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
+    }
+
+    void SortSprites() {
+        std::sort(sprites.begin(), sprites.end(), [](Sprite * a, Sprite * b) { return a->depth > b->depth; });
     }
 };

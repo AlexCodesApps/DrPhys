@@ -8,4 +8,3 @@ find_package(SDL2 REQUIRED COMPONENTS SDL2)
 find_package(SDL2_image REQUIRED COMPONENTS SDL2_image)
 add_executable(DrPhys main.cpp ${SRC_FILES})
 target_link_libraries(DrPhys PRIVATE SDL2::SDL2 PRIVATE SDL2_image::SDL2_image)
-
