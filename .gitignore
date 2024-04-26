@@ -1,0 +1,6 @@
+CMakeFiles/
+.ninja_log
+CMakeCache.txt
+compile_commands.json
+.vscode/
+.cmake/
