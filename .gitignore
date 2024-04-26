@@ -6,5 +6,9 @@ compile_commands.json
 .cmake/
 .DS_Store
 cmake_install.cmake
+<<<<<<< HEAD
 .ninja_deps
 build.ninja
+=======
+.ninja_deps
+>>>>>>> refs/remotes/origin/main
