@@ -4,3 +4,6 @@ CMakeCache.txt
 compile_commands.json
 .vscode/
 .cmake/
+.DS_Store
+cmake_install.cmake
+.ninja_deps
