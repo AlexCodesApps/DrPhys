@@ -21,7 +21,7 @@ namespace TextureManager {
         }
     }
     
-    SDL_Texture* Get(const std::string path) {
+    inline SDL_Texture* Get(const std::string path) {
         return textures.at(path);
     }
 
@@ -70,20 +70,20 @@ namespace SpriteManager {
             return sprite;
         }
 
-        Sprite * Transfer(std::unique_ptr<Sprite> sprite) {
-            sprites[sprite->ID] = std::move(sprite);
+        Sprite * Transfer(Sprite* sprite) {
+            sprites[sprite->ID] = std::unique_ptr<Sprite>(sprite);
             return sprites[sprite->ID].get();
         }
 
-        Sprite * Get(uint64_t ID) {
+        inline Sprite * Get(uint64_t ID) {
             return sprites[ID].get();
         }
 
-        void Delete(Sprite * sprite) {
+        inline void Delete(Sprite * sprite) {
             sprites.erase(sprite->ID);   
         }
 
-        void Delete(uint64_t ID) {
+        inline void Delete(uint64_t ID) {
             sprites.erase(ID);
         }
 
@@ -99,6 +99,14 @@ namespace SpriteManager {
             Renderer::sprites.clear();
             for (auto& sprite : sprites) {
                 Renderer::sprites.push_back(sprite.second.get());
+            }
+        }
+
+        void Clear(SpriteKind kind = SpriteKind::None) {
+            for (auto& sprite : sprites) {
+                if (kind == SpriteKind::None || sprite.second->kind == kind) {
+                    Delete(sprite.first);
+                }
             }
         }
     };

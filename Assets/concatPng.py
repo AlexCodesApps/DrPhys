@@ -10,7 +10,7 @@ def concat_images_horizontally(image_paths, output_name):
     max_height = max(image.height for image in images)
 
     # Create a new image with the required dimensions
-    new_image = Image.new('RGB', (total_width, max_height))
+    new_image = Image.new('RGBA', (total_width, max_height))
 
     # Paste each image onto the new image horizontally
     x_offset = 0
@@ -29,8 +29,8 @@ if __name__ == "__main__":
     input_folder = sys.argv[1]
     output_name = sys.argv[2]
 
-    # Get all PNG files in the folder
-    image_paths = [os.path.join(input_folder, file) for file in os.listdir(input_folder) if file.endswith('.png')]
+    # Get all PNG files in the folder and sort them
+    image_paths = sorted([os.path.join(input_folder, file) for file in os.listdir(input_folder) if file.endswith('.png')])
 
     # Concatenate the images horizontally and save the result
     concat_images_horizontally(image_paths, output_name)
