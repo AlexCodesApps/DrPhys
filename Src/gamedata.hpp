@@ -174,9 +174,7 @@ namespace Renderer {
     void Draw(const Sprite * sprite) {
         static SDL_FRect DestRect;
         DestRect = (sprite->Body + Camera::Position) * Camera::scale;
-        if (SDL_RenderCopyF(renderer, sprite->image->texture, &sprite->image->Source, &DestRect) < 0) {
-            std::cout << SDL_GetError() << std::endl;
-        }
+        SDL_RenderCopyF(renderer, sprite->image->texture, &sprite->image->Source, &DestRect);
     }
 
     void Quit() {
