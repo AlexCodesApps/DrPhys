@@ -46,10 +46,10 @@ int main() {
     testMap.Draw();
     Renderer::Render();
     InputManager::CopyCurrentState();
-    if (InputManager::keyboard_state[SDL_SCANCODE_UP]) Camera::Position.y += TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_DOWN]) Camera::Position.y -= TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_RIGHT]) Camera::Position.x -= TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_LEFT]) Camera::Position.x += TimeManager::DeltaTime;
+    if (InputManager::keyboard_state[SDL_SCANCODE_W]) Camera::Position.y += (float)TimeManager::DeltaTime;
+    if (InputManager::keyboard_state[SDL_SCANCODE_S]) Camera::Position.y -= (float)TimeManager::DeltaTime;
+    if (InputManager::keyboard_state[SDL_SCANCODE_D]) Camera::Position.x -= (float)TimeManager::DeltaTime;
+    if (InputManager::keyboard_state[SDL_SCANCODE_A]) Camera::Position.x += (float)TimeManager::DeltaTime;
   }
   TextureManager::Clear();
   Renderer::Quit();

@@ -24,7 +24,7 @@ namespace TimeManager {
     static uint64_t ElapsedTime = SDL_GetTicks64();
     static double DeltaTime = 0;
     void AdvanceTime() {
-        DeltaTime = (SDL_GetTicks64() - ElapsedTime);
+        DeltaTime = (SDL_GetTicks64() - ElapsedTime)/1000.0f;
         ElapsedTime = SDL_GetTicks64();
     }
 }
@@ -39,9 +39,7 @@ enum class SpriteKind {
     Acid,
 };
 
-struct Hitbox {
-    float w = 0, h = 0;
-};
+typedef SDL_FRect Hitbox;
 
 struct Image {
     SDL_Texture* texture;
@@ -86,7 +84,7 @@ struct Animator {
     Image * image;
     void Update() {
         if (!Active) return;
-        const int Wait = 1000 / FPS;
+        const int Wait = 1000.0f / FPS;
         if (++Counter*TimeManager::DeltaTime >= Wait) {
             Counter = 0;
             image->Source.x += Width;
@@ -166,7 +164,7 @@ namespace Renderer {
     void Render() {
         static SDL_FRect DestRect;
         for (auto sprite : sprites) {
-            DestRect = (sprite->Body * Camera::scale) + Camera::Position;
+            DestRect = (sprite->Body + Camera::Position) * Camera::scale;
             SDL_RenderCopyF(renderer, sprite->image->texture, &sprite->image->Source, &DestRect);
         }
         SDL_RenderPresent(renderer);
@@ -175,7 +173,7 @@ namespace Renderer {
 
     void Draw(const Sprite * sprite) {
         static SDL_FRect DestRect;
-        DestRect = (sprite->Body * Camera::scale) + Camera::Position;
+        DestRect = (sprite->Body + Camera::Position) * Camera::scale;
         if (SDL_RenderCopyF(renderer, sprite->image->texture, &sprite->image->Source, &DestRect) < 0) {
             std::cout << SDL_GetError() << std::endl;
         }
