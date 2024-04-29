@@ -9,9 +9,9 @@
 typedef SDL_Point Dimensions;
 
 namespace Camera {
-    static int16_t width = 400, height = 200;
+    static double width = 400.0f, height = 200.0f;
     float scale = 1; 
-    SDL_Point Position;
+    SDL_FPoint Position;
     Dimensions GetScreenSize() {
         SDL_Rect store;
         if (SDL_GetDisplayBounds(0, &store) >= 0) return Dimensions{store.w, store.h};
@@ -24,7 +24,7 @@ namespace TimeManager {
     static uint64_t ElapsedTime = SDL_GetTicks64();
     static double DeltaTime = 0;
     void AdvanceTime() {
-        DeltaTime = (SDL_GetTicks64() - ElapsedTime)/1000.0f;
+        DeltaTime = (SDL_GetTicks64() - ElapsedTime)/100.0f;
         ElapsedTime = SDL_GetTicks64();
     }
 }
@@ -130,7 +130,7 @@ SDL_FRect operator+(const SDL_FRect& a, const SDL_FRect& b) {
     return {a.x + b.x, a.y + b.y, a.w + b.w, a.h + b.h};
 }
 
-SDL_FRect operator+(const SDL_FRect& a, const SDL_Point& b) {
+SDL_FRect operator+(const SDL_FRect& a, const SDL_FPoint& b) {
     return {a.x + b.x, a.y + b.y, a.w, a.h};
 }
 

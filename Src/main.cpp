@@ -6,7 +6,14 @@
 #include "tilemap.hpp"
 
 int main() {
-  SDL_Init(SDL_INIT_EVERYTHING);  
+  SDL_Init(SDL_INIT_EVERYTHING);
+  {
+    Dimensions screen = Camera::GetScreenSize();
+    Camera::width = screen.x/4;
+    Camera::height = screen.y/4;
+    Camera::scale = 2.0f;
+
+  }  
   Renderer::Init();
   LoadContent();
   Tiles::TilesIndex tile;
@@ -37,7 +44,7 @@ int main() {
   Sprite * testRun2 = arena.New(SpriteKind::Player, SDL_FRect{10.0f, 10.0f, 32.0f, 32.0f}, &white);
   arena.SwapRenderList();
   Renderer::SortSprites();
-  Camera::Position = {Camera::width / 2, Camera::height / 2};
+  Camera::Position = {(float)Camera::width / 2, (float)Camera::height / 2};
   while (Renderer::running) {
     TimeManager::AdvanceTime();
     Animator::GlobalUpdate();
@@ -46,10 +53,10 @@ int main() {
     testMap.Draw();
     Renderer::Render();
     InputManager::CopyCurrentState();
-    if (InputManager::keyboard_state[SDL_SCANCODE_W]) Camera::Position.y += (float)TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_S]) Camera::Position.y -= (float)TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_D]) Camera::Position.x -= (float)TimeManager::DeltaTime;
-    if (InputManager::keyboard_state[SDL_SCANCODE_A]) Camera::Position.x += (float)TimeManager::DeltaTime;
+    if (InputManager::keyboard_state[SDL_SCANCODE_W]) Camera::Position.y += TimeManager::DeltaTime*10;
+    if (InputManager::keyboard_state[SDL_SCANCODE_S]) Camera::Position.y -= TimeManager::DeltaTime*10;
+    if (InputManager::keyboard_state[SDL_SCANCODE_D]) Camera::Position.x -= TimeManager::DeltaTime*10;
+    if (InputManager::keyboard_state[SDL_SCANCODE_A]) Camera::Position.x += TimeManager::DeltaTime*10;
   }
   TextureManager::Clear();
   Renderer::Quit();
