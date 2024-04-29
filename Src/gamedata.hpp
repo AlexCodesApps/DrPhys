@@ -24,7 +24,7 @@ namespace TimeManager {
     static uint64_t ElapsedTime = SDL_GetTicks64();
     static double DeltaTime = 0;
     void AdvanceTime() {
-        DeltaTime = (SDL_GetTicks64() - ElapsedTime)/100.0f;
+        DeltaTime = (SDL_GetTicks64() - ElapsedTime)/1000.0f;
         ElapsedTime = SDL_GetTicks64();
     }
 }
@@ -44,6 +44,8 @@ typedef SDL_FRect Hitbox;
 struct Image {
     SDL_Texture* texture;
     SDL_Rect Source;
+    Image() = default;
+    Image(SDL_Texture* _texture, SDL_Rect _Source = {0, 0, 16, 16}) : texture(_texture), Source(_Source) {}
 };
 
 class Sprite {
@@ -64,6 +66,10 @@ struct Animator {
     bool Active = false;
     Animator() = default;
     Animator(Image * image, int8_t _FPS, bool Active = true, bool _register = false) : FPS(_FPS > 0 ? _FPS : 1), image(image), Active(Active) {
+        Init(_register);
+    }
+
+    void Init(bool _register = false) {
         SDL_QueryTexture(image->texture, nullptr, nullptr, &FrameCount, nullptr);
         FrameCount /= Width;
         if (_register) Register();
@@ -72,7 +78,7 @@ struct Animator {
         DeRegister();
     }
     int FrameCount = 0;
-    uint8_t Counter = 0;
+    double Counter = 0;
     uint8_t const FPS = 10;
     static constexpr uint8_t Width = 16;
     static inline std::vector<Animator*> animators;
@@ -84,8 +90,9 @@ struct Animator {
     Image * image;
     void Update() {
         if (!Active) return;
-        const int Wait = 1000.0f / FPS;
-        if (++Counter*TimeManager::DeltaTime >= Wait) {
+        const double Wait = 20.0f / FPS;
+        if (Counter += TimeManager::DeltaTime >= Wait) {
+            std::cout << TimeManager::DeltaTime << std::endl;
             Counter = 0;
             image->Source.x += Width;
             if (image->Source.x >= FrameCount * Width) image->Source.x = 0;

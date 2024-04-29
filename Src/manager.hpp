@@ -2,17 +2,18 @@
 #include "gamedata.hpp"
 #include <initializer_list>
 
-namespace TextureManager {
+namespace ContentManager {
     static std::unordered_map<std::string, SDL_Texture*> textures;
 
     SDL_Texture* Load(const std::string path) {
-        if (textures.find(path) == textures.end()) {
-            textures[path] = IMG_LoadTexture(Renderer::renderer, std::string("../Assets/" + path ).c_str());
-            if (textures[path] != nullptr) {
+        std::string name = path.substr(path.find_last_of('/') + 1, path.find_last_of('.') - path.find_last_of('/') - 1);
+        if (textures.find(name) == textures.end()) {
+            textures[name] = IMG_LoadTexture(Renderer::renderer, std::string(path).c_str());
+            if (textures[name] != nullptr) {
                 std::cout << "Loaded " << path << std::endl;
             }
         }
-        return textures.at(path);
+        return textures.at(name);
     }
 
     void BatchLoad(std::initializer_list<std::string> paths) {
@@ -42,7 +43,9 @@ namespace InputManager {
 }
 
 namespace SpriteManager {
+    class PhysicsEngine;
     class Arena {
+        friend class PhysicsEngine;
         static inline std::vector<Arena *> arenas;
         static inline int8_t arena_index = 0;
         int8_t index = arena_index++;

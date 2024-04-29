@@ -4,7 +4,7 @@
 enum class TileFlags : uint8_t {
     None = 0,
     Solid = 1 << 0,
-    Death = 1 << 1,
+    Event = 1 << 1,
 };
 
 namespace Tiles {
@@ -13,9 +13,10 @@ namespace Tiles {
         static constexpr uint8_t width = 16, height = 16;
         uint8_t Flags = (uint8_t)TileFlags::None;
         Image * image = nullptr;
+        Hitbox hitbox = {0, 0, width, height};
 
-        static Tile MakeTileTemplate(std::string name, Image * image, uint8_t flags = (uint8_t)TileFlags::None) {
-            tiles[name] = Tile{.Flags = flags, .image = image};
+        static Tile MakeTileTemplate(std::string name, Image * image, uint8_t flags = (uint8_t)TileFlags::None, Hitbox _hitbox = {0, 0, width, height}) {
+            tiles[name] = Tile{.Flags = flags, .image = image, .hitbox = _hitbox};
             return tiles[name];
         }
         static inline Tile GetTileTemplate(std::string name) {
@@ -33,7 +34,7 @@ namespace Tiles {
     struct TileMap {
         static inline int tilemap_index = 0;
         SDL_FPoint Position;
-        float scale = 1;
+        float scale = 1.0f;
         const int index = tilemap_index++;
         static inline std::vector<TileMap*> tilemaps;
         TilesIndex tileindex;
@@ -54,9 +55,15 @@ namespace Tiles {
                 Tile tile = tileindex.at(tilemap[i]);
                 if (tile.image == nullptr) continue;
                 Sprite tile_sprite = Sprite(SpriteKind::Tile, tile.image);
-                tile_sprite.Body = {x_offset * width * scale + Position.x, y_offset * height * scale + Position.y, Tile::width * scale, Tile::height * scale};
+                tile_sprite.Body = {Position.x + x_offset * Tile::width * scale, Position.y + y_offset * Tile::height * scale, Tile::width * scale, Tile::height * scale};
                 tile_sprite.depth = -1;
                 Renderer::Draw(&tile_sprite);
+            }
+        }
+
+        void ForEach(std::function<void(Tile&)> func) {
+            for (auto& tile : tiles) {
+                func(tile);
             }
         }
     };
@@ -69,8 +76,21 @@ namespace Tiles {
             tilemaps.at(index)->Draw();
         }
 
-        void New(TileMap * tilemap) {
+        TileMap * New(TileMap * tilemap) {
             tilemaps[tilemap->index] = tilemap;
+            return tilemap;
+        }
+
+        TileMap * New(const TilesIndex & tileindex, int width, int height) {
+            TileMap * tilemap = new TileMap(tileindex, width, height);
+            tilemaps[tilemap->index] = tilemap;
+            return tilemap;
+        }
+
+        TileMap * Get(int _index = TileMapManager::index) {
+            if (tilemaps.find(_index) != tilemaps.end())
+            return tilemaps.at(_index);
+            return nullptr;
         }
 
         void Remove(int index) {
